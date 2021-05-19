@@ -3,12 +3,12 @@
 #include <functional>
 
 #ifdef _MSC_VER
-#include <Windows.h>
-#elif defined(__APPLE__) && defined(__MACH__)
-#define _XOPEN_SOURCE
-#include <ucontext.h>
+# include <Windows.h>
 #else
-#include <ucontext.h>
+# if defined(__APPLE__) && defined(__MACH__)
+#  define _XOPEN_SOURCE
+# endif
+# include <ucontext.h>
 #endif
 
 enum Status { SUSPENDED, RUNNING, NORMAL, DEAD };
@@ -17,7 +17,12 @@ class Coroutine {
   Status state;
   std::function<void(void)> func;
   Coroutine *co_caller;
+#ifdef _MSC_VER
+  LPVOID fiber;
+#else
+  void *stack;
   ucontext_t ctx;
+#endif
 
   static thread_local Coroutine co_main, *co_curr;
 
@@ -36,18 +41,19 @@ public:
   static void yield(void);
 
   static Coroutine *running(void) {
-    thread_local Coroutine co_main;
-    thread_local Coroutine *co_curr = &co_main;
     return co_curr;
   }
 
   ~Coroutine(void) noexcept {
-    if (func) {
-      void *stack = ctx.uc_stack.ss_sp;
-      if (stack != nullptr) {
-        ::operator delete(stack);
-      }
+#ifdef _MSC_VER
+    if (func && fiber) {
+      DeleteFiber(fiber);
     }
+#else
+    if (func && stack) {
+      ::operator delete(stack);
+    }
+#endif
   }
 
   bool resume(void);

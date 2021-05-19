@@ -7,6 +7,7 @@ int main(void) {
   Coroutine *co_main = Coroutine::running();
 
   Coroutine *co = Coroutine::create([&] {
+    assert(co == Coroutine::running());
     assert(co_main->status() == NORMAL);
     assert(co->status() == RUNNING);
     std::cout << "Hello, " << std::flush;
