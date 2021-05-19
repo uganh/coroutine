@@ -1,0 +1,14 @@
+digraph G {
+  node0 [shape=circle, label=""      ]
+  node1 [shape=box, label="SUSPENDED"]
+  node2 [shape=box, label="RUNNING"  ]
+  node3 [shape=box, label="NORMAL"   ]
+  node4 [shape=circle, label="DEAD"  ]
+
+  node0 -> node1 [label="create"          ]
+  node1 -> node2 [label="resume"          ]
+  node2 -> node1 [label="yield"           ]
+  node2 -> node3 [label="resume other"    ]
+  node3 -> node2 [label="yield from other"]
+  node2 -> node4 [label="return"          ]
+}
