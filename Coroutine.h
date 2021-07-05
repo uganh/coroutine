@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <future>
 
 #ifdef _MSC_VER
 # include <Windows.h>
@@ -62,3 +63,9 @@ public:
     return state;
   }
 };
+
+template <typename FunctionTy>
+typename std::result_of<FunctionTy()>::type await(FunctionTy &&func) {
+  auto future = std::async(std::launch::async, func);
+  // std::future_status status = future.wait_for(std::)
+}

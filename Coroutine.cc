@@ -10,10 +10,12 @@ thread_local Coroutine *Coroutine::co_curr = &co_main;
  */
 void Coroutine::entry(void) {
   co_curr->func();
-  co_curr->state = DEAD;
-  co_curr->co_caller->state = RUNNING;
-  co_curr = co_curr->co_caller;
-
+  Coroutine *co_prev = co_curr;
+  co_curr = co_prev->co_caller;
+  co_prev->state = DEAD;
+  co_curr = co_prev->co_caller;
+  co_prev->co_caller = nullptr;
+  co_curr->state = RUNNING;
   /* Switch context here */
 }
 
@@ -83,6 +85,7 @@ void Coroutine::yield(void) {
   if (co_curr->co_caller) {
     Coroutine *co_prev = co_curr;
     co_curr = co_curr->co_caller;
+    co_prev->co_caller = nullptr;
     co_prev->state = SUSPENDED;
     co_curr->state = RUNNING;
 #ifdef _MSC_VER
